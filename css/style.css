@@ -33,7 +33,7 @@ ul {
 }
 
 .text-secondary {
-    color: var(--color-primary);
+    color: var(--color-secondary);
 }
 
 .active {
