@@ -5,6 +5,7 @@ const global = {
         type: '',
         page: 1,
         totalPages: 1,
+        totalResults: 0,
     },
     api: {
         apiKey: 'ab60d473df10890068aa790aaed730b8',
@@ -189,12 +190,74 @@ async function search() {
     global.search.term = urlParams.get('search-term');
     global.search.type = urlParams.get('type');
 
-    if(global.search.term !== '' && global.search.term!== null) {
-        const results = await fetchAPIData(`/search/${global.search.type}?query=${global.search.term}&page=${global.search.page}`);
+    if(global.search.term !== '' && global.search.term !== null) {
+        const { results, total_pages, page} = await searchAPIData();
+
+        if(results.length === 0) {
+            showAlert('No results found');
+            return
+        }
+
+        displaySearchResults(results);
+
+        document.querySelector('#search-term').value = '';
+
     } else {
         showAlert('Please enter a search term')
     }
+}
 
+function displaySearchResults(results) {
+    // Clear previous results
+    document.querySelector('#search-results').innerHTML = '';
+    document.querySelector('#search-results-heading').innerHTML = '';
+    document.querySelector('#pagination').innerHTML = '';
+  
+    results.forEach((result) => {
+      const div = document.createElement('div');
+      div.classList.add('card');
+      div.innerHTML = `
+            <a href="${global.search.type}-details.html?id=${result.id}">
+              ${
+                result.poster_path
+                  ? `<img
+                src="https://image.tmdb.org/t/p/w500${result.poster_path}"
+                class="card-img-top"
+                alt="${
+                  global.search.type === 'movie' ? result.title : result.name
+                }"
+              />`
+                  : `<img
+              src="../images/no-image.jpg"
+              class="card-img-top"
+               alt="${
+                 global.search.type === 'movie' ? result.title : result.name
+               }"
+            />`
+              }
+            </a>
+            <div class="card-body">
+              <h5 class="card-title">${
+                global.search.type === 'movie' ? result.title : result.name
+              }</h5>
+              <p class="card-text">
+                <small class="text-muted">Release: ${
+                  global.search.type === 'movie'
+                    ? result.release_date
+                    : result.first_air_date
+                }</small>
+              </p>
+            </div>
+          `;
+  
+      document.querySelector('#search-results-heading').innerHTML = `
+                <h2>${results.length} of ${global.search.totalResults} Results for ${global.search.term}</h2>
+      `;
+  
+      document.querySelector('#search-results').appendChild(div);
+    });
+  
+    displayPagination();
 }
 
 async function displaySlider() {
@@ -243,8 +306,8 @@ function initSwiper() {
 }
 
 async function fetchAPIData(endpoint) {
-    const API_KEY = 'global.api.apiKey';
-    const API_URL = 'global.api.apiUrl';
+    const API_KEY = global.api.apiKey;
+    const API_URL = global.api.apiUrl;
 
     showSpinner();
 
@@ -258,12 +321,12 @@ async function fetchAPIData(endpoint) {
 }
 
 async function searchAPIData() {
-    const API_KEY = 'global.api.apiKey';
-    const API_URL = 'global.api.apiUrl';
+    const API_KEY = global.api.apiKey;
+    const API_URL = global.api.apiUrl;
 
     showSpinner();
 
-    const response = await fetch(`${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}&page=${global.search.page}&include_adult=false`);
+    const response = await fetch(`${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}`);
 
     const data = await response.json();
 
@@ -290,7 +353,7 @@ function highlightActiveLink() {
     });
 }
 
-function showAlert(message, className) {
+function showAlert(message, className = 'error') {
     const alertEl = document.createElement('div');
     alertEl.classList.add('alert', className);
     alertEl.appendChild(document.createTextNode(message));
