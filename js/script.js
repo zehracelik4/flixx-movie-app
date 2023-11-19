@@ -191,7 +191,11 @@ async function search() {
     global.search.type = urlParams.get('type');
 
     if(global.search.term !== '' && global.search.term !== null) {
-        const { results, total_pages, page} = await searchAPIData();
+        const { results, total_pages, page, total_results} = await searchAPIData();
+
+        global.search.totalPages = total_pages;
+        global.search.page = page;
+        global.search.totalResults = total_results;
 
         if(results.length === 0) {
             showAlert('No results found');
@@ -260,6 +264,32 @@ function displaySearchResults(results) {
     displayPagination();
 }
 
+function displayPagination() {
+    const div = document.createElement('div');
+    div.classList.add('pagination');
+    div.innerHTML = `
+    <button class="btn btn-primary" id="prev">Previous Page</button>
+    <button class="btn btn-primary" id="next">Next Page</button>
+    <div class="page-counter">Page${global.search.page} of ${global.search.total_pages}</div>
+    `;
+
+    document.querySelector('#pagination').appendChild(div);
+
+    document.querySelector('#prev').addEventListener('click', () => {
+        if(global.search.page > 1) {
+            global.search.page--;
+            search();
+        }
+    });
+
+    document.querySelector('#next').addEventListener('click', () => {
+        if(global.search.page < global.search.totalPages) {
+            global.search.page++;
+            search();
+        }
+    });
+}
+
 async function displaySlider() {
     const { results } = await fetchAPIData('/movie/now_playing');
 
@@ -326,7 +356,7 @@ async function searchAPIData() {
 
     showSpinner();
 
-    const response = await fetch(`${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}`);
+    const response = await fetch(`${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}&page=${global.search.page}&include_adult=false`);
 
     const data = await response.json();
 
