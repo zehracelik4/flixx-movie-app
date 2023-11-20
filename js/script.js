@@ -45,7 +45,7 @@ async function displayPopularShows() {
 
         div.innerHTML = `
         <a href="/tv-details.html?id=${show.id}">
-            <img src="https://image.tmdb.org/t/p/w500${show.poster_path}" class="card-img-top" alt="${movie.title}">
+            <img src="https://image.tmdb.org/t/p/w500${show.poster_path}" class="card-img-top" alt="${show.title}">
         </a>
 
         <div class="card-body">
@@ -111,8 +111,8 @@ async function displayMovieDetails() {
 }
 
 async function displayShowDetails() {
-    const movieId = window.location.search.split('=')[1];
-    const movie = await fetchAPIData(`/tv/${showId}`);
+    const showId = window.location.search.split('=')[1];
+    const show = await fetchAPIData(`/tv/${showId}`);
 
     displayBackgroundImage('tv', show.backdrop_path);
 
@@ -153,7 +153,7 @@ async function displayShowDetails() {
           </ul>
           <h4>Production Companies</h4>
           <div class="list-group">
-            ${movie.production_companies.map(company => `<li class="list-group-item">${company.name}</li>`).join('')}
+            ${show.production_companies.map(company => `<li class="list-group-item">${company.name}</li>`).join('')}
           </div>
         </div>
     `;
